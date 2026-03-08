@@ -24,6 +24,7 @@
         <div id="tableTab" class="tab active">
             Départ :
             <input type="time" id="startTime" />
+            <button id="startNow">Start</button>
 
             <br /><br />
 
@@ -60,9 +61,23 @@
         <!-- OBSERVATEUR -->
 
         <div id="observateur" class="tab">
-            <div id="obsTime"></div>
-
-            <div id="obsKm"></div>
+            <div
+                id="obsNextBlock"
+                style="
+                    font-size: 28px;
+                    margin: 10px 0;
+                    padding: 10px;
+                    border: 1px solid #ccc;
+                "
+            >
+                <div>Prochain KM <span id="obsNextKm">-</span></div>
+                <div>
+                    Passage estimé : <span id="obsNextTime">--:--:--</span>
+                </div>
+                <div>
+                    Temps restant : <span id="obsNextCountdown">--:--</span>
+                </div>
+            </div>
 
             <table id="obsTable">
                 <thead>
