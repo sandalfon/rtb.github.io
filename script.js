@@ -124,7 +124,7 @@ function buildTable() {
 <td>
 <div style="display:flex;gap:4px;align-items:center">
 <button class="delayMinus" data-km="${i}">-10</button>
-<input class="delay" data-km="${i}" value="${delay}" style="width:90px">
+<input type="time" step="1" class="delay" data-km="${i}" value="${delay}" style="width:110px">
 <button class="delayPlus" data-km="${i}">+10</button>
 </div>
 </td>
