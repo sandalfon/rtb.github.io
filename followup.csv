@@ -1,3 +1,4 @@
-KM,Lieu,Temps G,Délai L,Ligne,Station,sCommentaire
-0,Pl Catalunya,00:32,00,L2,pg gracia,SAS de départ
-2,Marina,00:32,16,L2,Monumental, ou 1.5km à pied
+KM,Lieu,Délai L,Ligne,Station,sCommentaire
+0,Pl Catalunya,00,L2,pg gracia,SAS de départ
+2,Marina,16,L2,Monumental, ou 1.5km à pied
+8,Valencia,5,-,-,300m à pied
