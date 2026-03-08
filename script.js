@@ -546,10 +546,20 @@ function updateObservateurCountdown() {
     if (navigator.vibrate) {
       navigator.vibrate([500, 200, 500]);
     }
+    const title = "Plan Marathon";
+    const options = {
+      body: `Arrivée au KM ${km} dans 2 minutes !`,
+      icon: "manifest.json",
+    };
+
     if (Notification.permission === "granted") {
-      new Notification("Plan Marathon", {
-        body: `Arrivée au KM ${km} dans 2 minutes !`,
-      });
+      if ("serviceWorker" in navigator && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(title, options);
+        });
+      } else {
+        new Notification(title, options);
+      }
     }
     lastNotifKm = km;
   }
@@ -597,9 +607,22 @@ window.onload = () => {
   buildTable();
   buildObservateurTable();
 
-  // Ask for notification permission
-  if ("Notification" in window && Notification.permission !== "denied") {
-    Notification.requestPermission();
+  // Notification button listener
+  const notifBtn = document.getElementById("notifBtn");
+  if (notifBtn) {
+    if (Notification.permission === "granted") {
+      notifBtn.style.display = "none";
+    }
+
+    notifBtn.onclick = () => {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          notifBtn.style.display = "none";
+          // Testing notification on button click
+          new Notification("Plan Marathon", { body: "Notifications activées !" });
+        }
+      });
+    };
   }
 
   const startInput = document.getElementById("startTime");
