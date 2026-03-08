@@ -1,3 +1,5 @@
+/* PACES */
+
 const pace630 = [
   "00:06:25",
   "00:06:31",
@@ -94,7 +96,7 @@ let pace = pace630;
 
 const tbody = document.querySelector("#table tbody");
 
-/* ---------- TABLE ---------- */
+/* TABLE */
 
 function buildTable() {
   tbody.innerHTML = "";
@@ -110,7 +112,7 @@ function buildTable() {
     if (km == 30) row.classList.add("km30");
     if (km == 40) row.classList.add("km40");
 
-    let delay = saved[i]?.delay || 0;
+    let delay = saved[i]?.delay || "00:00:00";
     let rav = saved[i]?.rav || "non";
     let note = saved[i]?.note || "";
 
@@ -125,7 +127,7 @@ function buildTable() {
 <td class="passage"></td>
 
 <td>
-<input class="delay" data-km="${i}" value="${delay}">
+<input type="time" step="1" class="delay" data-km="${i}" value="${delay}">
 </td>
 
 <td>
@@ -147,11 +149,17 @@ function buildTable() {
   updateTimes();
   saveListeners();
 }
-
-/* ---------- TEMPS ---------- */
+/* TEMPS */
 
 function toSec(t) {
+  if (!t) return 0;
+
   let a = t.split(":");
+
+  if (a.length === 2) {
+    return +a[0] * 60 + +a[1];
+  }
+
   return +a[0] * 3600 + +a[1] * 60 + +a[2];
 }
 
@@ -159,6 +167,7 @@ function format(s) {
   let h = Math.floor(s / 3600);
   let m = Math.floor((s % 3600) / 60);
   let ss = s % 60;
+
   return [h, m, ss].map((v) => String(v).padStart(2, "0")).join(":");
 }
 
@@ -176,10 +185,12 @@ function updateTimes() {
   let cumul = 0;
 
   tbody.querySelectorAll("tr").forEach((r, i) => {
-    let p = pace[i];
-    let d = parseInt(r.querySelector(".delay").value) || 0;
+    let temps = toSec(pace[i]);
 
-    cumul += toSec(p) + d;
+    let delayValue = r.querySelector(".delay").value;
+    let delay = toSec(delayValue);
+
+    cumul += temps + delay;
 
     r.querySelector(".cumul").innerText = format(cumul);
 
@@ -187,9 +198,22 @@ function updateTimes() {
 
     r.querySelector(".passage").innerText = t.toTimeString().slice(0, 8);
   });
-}
 
-/* ---------- SAUVEGARDE ---------- */
+  updateObservateurTimes();
+}
+/* ---------- PACE BUTTONS ---------- */
+
+document.getElementById("pace615").onclick = () => {
+  pace = pace615;
+  buildTable();
+};
+
+document.getElementById("pace630").onclick = () => {
+  pace = pace630;
+  buildTable();
+};
+
+/* SAUVEGARDE */
 
 function saveListeners() {
   document.querySelectorAll(".delay,.rav,.note").forEach((el) => {
@@ -213,31 +237,7 @@ function saveData() {
   updateTimes();
 }
 
-/* ---------- PACE BUTTONS ---------- */
-
-document.getElementById("pace615").onclick = () => {
-  pace = pace615;
-  buildTable();
-};
-
-document.getElementById("pace630").onclick = () => {
-  pace = pace630;
-  buildTable();
-};
-
-/* ---------- TABS ---------- */
-
-function showTab(id) {
-  document
-    .querySelectorAll(".tab")
-    .forEach((t) => t.classList.remove("active"));
-
-  document.getElementById(id).classList.add("active");
-
-  if (id === "course") updateCourse();
-}
-
-/* ---------- MODE COURSE ---------- */
+/* MODE COURSE */
 
 function updateCourse() {
   let now = new Date();
@@ -252,21 +252,21 @@ function updateCourse() {
   let [h, m] = start.split(":");
 
   let s = new Date();
+
   s.setHours(h);
   s.setMinutes(m);
   s.setSeconds(0);
 
   let elapsed = (now - s) / 1000;
 
-  let km = 0;
   let cumul = 0;
+  let km = 0;
   let ravitos = [];
 
   tbody.querySelectorAll("tr").forEach((r, i) => {
-    let p = pace[i];
     let d = parseInt(r.querySelector(".delay").value) || 0;
 
-    cumul += toSec(p) + d;
+    cumul += toSec(pace[i]) + d;
 
     let rav = r.querySelector(".rav").value;
     let note = r.querySelector(".note").value;
@@ -275,13 +275,7 @@ function updateCourse() {
     if (elapsed > cumul) km = i + 1;
 
     if (rav != "non") {
-      ravitos.push({
-        km: i + 1,
-        rav,
-        note,
-        time,
-        cumul,
-      });
+      ravitos.push({ km: i + 1, rav, note, time, cumul });
     }
   });
 
@@ -293,19 +287,103 @@ function updateCourse() {
     let cls =
       r.cumul > elapsed && !html.includes("next") ? "ravito next" : "ravito";
 
-    html += `
-<div class="${cls}">
+    html += `<div class="${cls}">
 KM ${r.km} - ${r.rav} ${r.note} ${r.time}
-</div>
-`;
+</div>`;
   });
 
   document.getElementById("ravitoList").innerHTML = html;
+
+  updateObservateur(km);
 }
 
-setInterval(updateCourse, 1000);
+/* OBSERVATEUR */
 
-/* ---------- URL TAB ---------- */
+function updateObservateur(km) {
+  let now = new Date();
+
+  document.getElementById("obsTime").innerText = now.toTimeString().slice(0, 8);
+
+  document.getElementById("obsKm").innerText = "KM " + km;
+
+  highlightObservateur(km);
+}
+
+function highlightObservateur(km) {
+  let rows = document.querySelectorAll("#obsTable tbody tr");
+
+  rows.forEach((r) => {
+    r.classList.remove("current");
+
+    let rowKm = parseInt(r.dataset.km);
+
+    if (rowKm >= km && !document.querySelector("#obsTable tr.current")) {
+      r.classList.add("current");
+    }
+  });
+}
+
+/* CSV */
+
+function buildObservateurTable() {
+  fetch("https://sandalfon.github.io/rtb/followup.csv")
+    .then((r) => r.text())
+    .then((text) => {
+      let lines = text.trim().split(/\r?\n/);
+
+      let sep = lines[0].includes(";") ? ";" : ",";
+
+      let headers = lines[0].split(sep).map((h) => h.trim());
+
+      let tbody = document.querySelector("#obsTable tbody");
+
+      tbody.innerHTML = "";
+
+      for (let i = 1; i < lines.length; i++) {
+        let cols = lines[i].split(sep).map((c) => c.trim());
+
+        let tr = document.createElement("tr");
+
+        headers.forEach((h, index) => {
+          let td = document.createElement("td");
+
+          if (h == "Temps G") {
+            td.classList.add("obsTime");
+          } else {
+            td.innerText = cols[index] || "";
+          }
+
+          tr.appendChild(td);
+        });
+
+        tr.dataset.km = cols[0];
+
+        tbody.appendChild(tr);
+      }
+    });
+}
+
+/* MAJ TEMPS OBSERVATEUR */
+
+function updateObservateurTimes() {
+  let rows = document.querySelectorAll("#obsTable tbody tr");
+
+  rows.forEach((r) => {
+    let km = parseInt(r.dataset.km);
+
+    let tableRow = document.querySelectorAll("#table tbody tr")[km - 1];
+
+    if (!tableRow) return;
+
+    let passage = tableRow.querySelector(".passage").innerText;
+
+    let cell = r.querySelector(".obsTime");
+
+    if (cell) cell.innerText = passage;
+  });
+}
+
+/* URL */
 
 function loadUrl() {
   let url = document.getElementById("customUrl").value;
@@ -319,18 +397,24 @@ function resetUrl() {
   localStorage.removeItem("customUrl");
 
   document.getElementById("urlFrame").src = "";
-  document.getElementById("customUrl").value = "";
 }
 
-/* ---------- INIT ---------- */
+/* TABS */
+
+function showTab(id) {
+  document
+    .querySelectorAll(".tab")
+    .forEach((t) => t.classList.remove("active"));
+
+  document.getElementById(id).classList.add("active");
+}
+
+/* INIT */
 
 window.onload = () => {
   buildTable();
 
-  let url = localStorage.getItem("customUrl");
-
-  if (url) {
-    document.getElementById("customUrl").value = url;
-    document.getElementById("urlFrame").src = url;
-  }
+  buildObservateurTable();
 };
+
+setInterval(updateCourse, 1000);
