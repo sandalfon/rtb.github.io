@@ -514,7 +514,9 @@ function updateObservateurCountdown() {
   block.style.background = color;
   nextRow.style.background = color;
 
-  document.getElementById("obsNextKm").innerText = "KM " + nextRow.dataset.km;
+  let lieu = nextRow.cells[1]?.innerText || "";
+
+  document.getElementById("obsNextKm").innerText = "KM " + nextRow.dataset.km + " - " + lieu;
 
   document.getElementById("obsNextTime").innerText = nextTime
     .toTimeString()

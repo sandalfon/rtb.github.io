@@ -52,12 +52,11 @@ th {
 
 /* OBSERVATEUR */
 
-#obsNextTime {
+#obsNextTime, #obsNextKm, #obsNextCountdown {
     font-size: 70px;
 }
 
 #obsNextKm {
-    font-size: 120px;
     margin-bottom: 20px;
 }
 
@@ -121,16 +120,12 @@ th {
     }
 
     /* OBSERVATEUR */
-    #obsNextTime {
-        font-size: 40px;
-    }
-
-    #obsNextKm {
-        font-size: 60px;
+    #obsNextTime, #obsNextKm, #obsNextCountdown {
+        font-size: 30px;
     }
 
     #obsNextBlock {
-        font-size: 18px !important;
+        font-size: 16px !important;
     }
 
     /* Delay buttons */
