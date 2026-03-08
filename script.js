@@ -499,8 +499,6 @@ function resetUrl() {
   document.getElementById("urlFrame").src = "";
 }
 
-let lastNotifKm = -1;
-
 function updateObservateurCountdown() {
   let now = new Date();
 
@@ -540,30 +538,6 @@ function updateObservateurCountdown() {
 
   let diff = Math.floor((nextTime - now) / 1000);
 
-  // Vibration and Notification at 2 minutes
-  let km = nextRow.dataset.km;
-  if (diff <= 120 && diff > 115 && lastNotifKm !== km) {
-    if (navigator.vibrate) {
-      navigator.vibrate([500, 200, 500]);
-    }
-    const title = "Plan Marathon";
-    const options = {
-      body: `Arrivée au KM ${km} dans 2 minutes !`,
-      icon: "manifest.json",
-    };
-
-    if (Notification.permission === "granted") {
-      if ("serviceWorker" in navigator && navigator.serviceWorker.ready) {
-        navigator.serviceWorker.ready.then((registration) => {
-          registration.showNotification(title, options);
-        });
-      } else {
-        new Notification(title, options);
-      }
-    }
-    lastNotifKm = km;
-  }
-
   let mm = Math.floor(diff / 60);
   let ss = diff % 60;
 
@@ -581,7 +555,8 @@ function updateObservateurCountdown() {
 
   let lieu = nextRow.cells[1]?.innerText || "";
 
-  document.getElementById("obsNextKm").innerText = "KM " + nextRow.dataset.km + " - " + lieu;
+  document.getElementById("obsNextKm").innerText =
+    "KM " + nextRow.dataset.km + " - " + lieu;
 
   document.getElementById("obsNextTime").innerText = nextTime
     .toTimeString()
@@ -607,35 +582,34 @@ window.onload = () => {
   buildTable();
   buildObservateurTable();
 
-  // Notification button listener
-  const notifBtn = document.getElementById("notifBtn");
-  if (notifBtn) {
-    if (Notification.permission === "granted") {
-      notifBtn.style.display = "none";
-    }
-
-    notifBtn.onclick = () => {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          notifBtn.style.display = "none";
-          // Testing notification on button click
-          new Notification("Plan Marathon", { body: "Notifications activées !" });
-        }
-      });
-    };
-  }
-
   const startInput = document.getElementById("startTime");
   const startBtn = document.getElementById("startNow");
+
+  function triggerStart() {
+    // Reset delays in DOM
+    document.querySelectorAll(".delay").forEach((input) => {
+      input.value = "00:00:00";
+    });
+
+    // Persist changes (this keeps rav and note as they are in the DOM)
+    saveData();
+
+    // Reset obsNextBlock
+    document.getElementById("obsNextKm").innerText = "-";
+    document.getElementById("obsNextTime").innerText = "--:--:--";
+    document.getElementById("obsNextCountdown").innerText = "--:--";
+    const block = document.getElementById("obsNextBlock");
+    if (block) block.style.background = "";
+  }
 
   // recalcul automatique quand l'heure de départ change
   if (startInput) {
     startInput.addEventListener("change", () => {
-      updateTimes();
+      triggerStart();
     });
 
     startInput.addEventListener("input", () => {
-      updateTimes();
+      triggerStart();
     });
   }
 
@@ -648,16 +622,14 @@ window.onload = () => {
       const m = String(now.getMinutes()).padStart(2, "0");
 
       startInput.value = `${h}:${m}`;
+      triggerStart();
+    });
+  }
+};
 
-      updateTimes();
-      });
-      }
-      };
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
 
-      if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js");
-      }
-
-      setInterval(updateCourse, 1000);
-      setInterval(updateObservateurCountdown, 1000);
-
+setInterval(updateCourse, 1000);
+setInterval(updateObservateurCountdown, 1000);
