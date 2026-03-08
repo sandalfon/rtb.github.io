@@ -499,6 +499,8 @@ function resetUrl() {
   document.getElementById("urlFrame").src = "";
 }
 
+let lastNotifKm = -1;
+
 function updateObservateurCountdown() {
   let now = new Date();
 
@@ -537,6 +539,30 @@ function updateObservateurCountdown() {
   }
 
   let diff = Math.floor((nextTime - now) / 1000);
+
+  // Vibration and Notification at 2 minutes
+  let km = nextRow.dataset.km;
+  if (diff <= 120 && diff > 115 && lastNotifKm !== km) {
+    if (navigator.vibrate) {
+      navigator.vibrate([500, 200, 500]);
+    }
+    const title = "Plan Marathon";
+    const options = {
+      body: `Arrivée au KM ${km} dans 2 minutes !`,
+      icon: "manifest.json",
+    };
+
+    if (Notification.permission === "granted") {
+      if ("serviceWorker" in navigator && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(title, options);
+        });
+      } else {
+        new Notification(title, options);
+      }
+    }
+    lastNotifKm = km;
+  }
 
   let mm = Math.floor(diff / 60);
   let ss = diff % 60;
@@ -580,6 +606,24 @@ function showTab(id) {
 window.onload = () => {
   buildTable();
   buildObservateurTable();
+
+  // Notification button listener
+  const notifBtn = document.getElementById("notifBtn");
+  if (notifBtn) {
+    if (Notification.permission === "granted") {
+      notifBtn.style.display = "none";
+    }
+
+    notifBtn.onclick = () => {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          notifBtn.style.display = "none";
+          // Testing notification on button click
+          new Notification("Plan Marathon", { body: "Notifications activées !" });
+        }
+      });
+    };
+  }
 
   const startInput = document.getElementById("startTime");
   const startBtn = document.getElementById("startNow");
