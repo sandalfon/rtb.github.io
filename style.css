@@ -52,18 +52,13 @@ th {
 
 /* OBSERVATEUR */
 
-#obsTime {
+#obsNextTime {
     font-size: 70px;
 }
 
-#obsKm {
+#obsNextKm {
     font-size: 120px;
     margin-bottom: 20px;
-}
-
-#obsTable tr.current {
-    background: #ffe066;
-    font-weight: bold;
 }
 
 /* URL */
@@ -72,4 +67,75 @@ th {
     width: 100%;
     height: 80vh;
     border: none;
+}
+
+/* RESPONSIVE / MOBILE */
+
+@media (max-width: 600px) {
+    body {
+        margin: 0;
+        padding: 10px;
+    }
+
+    /* Tabs buttons */
+    button {
+        padding: 10px 5px;
+        margin: 2px;
+        font-size: 12px;
+    }
+
+    /* Tables */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+
+    td, th {
+        padding: 4px 6px;
+    }
+
+    /* Inputs in tables */
+    input.delay, input.note {
+        width: 60px !important;
+        font-size: 12px;
+    }
+
+    select.rav {
+        font-size: 12px;
+    }
+
+    /* MODE COURSE */
+    #courseTime {
+        font-size: 40px;
+    }
+
+    #courseKm {
+        font-size: 35px;
+    }
+
+    .ravito {
+        font-size: 18px;
+        padding: 5px;
+    }
+
+    /* OBSERVATEUR */
+    #obsNextTime {
+        font-size: 40px;
+    }
+
+    #obsNextKm {
+        font-size: 60px;
+    }
+
+    #obsNextBlock {
+        font-size: 18px !important;
+    }
+
+    /* Delay buttons */
+    .delayMinus, .delayPlus {
+        padding: 5px;
+        min-width: 30px;
+    }
 }

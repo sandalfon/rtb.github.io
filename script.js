@@ -117,19 +117,17 @@ function buildTable() {
     let note = saved[i]?.note || "";
 
     row.innerHTML = `
-
 <td>${km}</td>
-
 <td class="pace">${pace[i]}</td>
-
 <td class="cumul"></td>
-
 <td class="passage"></td>
-
 <td>
-<input type="time" step="1" class="delay" data-km="${i}" value="${delay}">
+<div style="display:flex;gap:4px;align-items:center">
+<button class="delayMinus" data-km="${i}">-10</button>
+<input class="delay" data-km="${i}" value="${delay}" style="width:90px">
+<button class="delayPlus" data-km="${i}">+10</button>
+</div>
 </td>
-
 <td>
 <select class="rav" data-km="${i}">
 <option ${rav == "non" ? "selected" : ""}>non</option>
@@ -137,11 +135,9 @@ function buildTable() {
 <option ${rav == "plan B" ? "selected" : ""}>plan B</option>
 </select>
 </td>
-
 <td>
 <input class="note" data-km="${i}" value="${note}">
-</td>
-`;
+</td>`;
 
     tbody.appendChild(row);
   }
@@ -149,18 +145,76 @@ function buildTable() {
   updateTimes();
   saveListeners();
 }
+
+/* DELAY BUTTONS */
+
+document.addEventListener("click", (e) => {
+  if (
+    e.target.classList.contains("delayPlus") ||
+    e.target.classList.contains("delayMinus")
+  ) {
+    let km = e.target.dataset.km;
+
+    let input = document.querySelector('.delay[data-km="' + km + '"]');
+
+    let sec = toSec(input.value);
+
+    if (e.target.classList.contains("delayPlus")) {
+      sec += 10;
+    } else {
+      sec -= 10;
+    }
+
+    input.value = secToTime(sec);
+
+    updateTimes();
+    saveData();
+  }
+});
+
 /* TEMPS */
 
 function toSec(t) {
   if (!t) return 0;
 
-  let a = t.split(":");
+  let sign = 1;
 
-  if (a.length === 2) {
-    return +a[0] * 60 + +a[1];
+  if (t.startsWith("-")) {
+    sign = -1;
+    t = t.substring(1);
   }
 
-  return +a[0] * 3600 + +a[1] * 60 + +a[2];
+  if (t.startsWith("+")) {
+    t = t.substring(1);
+  }
+
+  let a = t.split(":");
+
+  let sec = (+a[0] || 0) * 3600 + (+a[1] || 0) * 60 + (+a[2] || 0);
+
+  return sec * sign;
+}
+
+function secToTime(sec) {
+  let sign = "";
+
+  if (sec < 0) {
+    sign = "-";
+    sec = Math.abs(sec);
+  }
+
+  let h = Math.floor(sec / 3600);
+  let m = Math.floor((sec % 3600) / 60);
+  let s = sec % 60;
+
+  return (
+    sign +
+    String(h).padStart(2, "0") +
+    ":" +
+    String(m).padStart(2, "0") +
+    ":" +
+    String(s).padStart(2, "0")
+  );
 }
 
 function format(s) {
@@ -200,8 +254,11 @@ function updateTimes() {
   });
 
   updateObservateurTimes();
+  updateCourse();
+  updateObservateurCountdown();
 }
-/* ---------- PACE BUTTONS ---------- */
+
+/* PACE BUTTONS */
 
 document.getElementById("pace615").onclick = () => {
   pace = pace615;
@@ -213,11 +270,11 @@ document.getElementById("pace630").onclick = () => {
   buildTable();
 };
 
-/* SAUVEGARDE */
+/* SAVE */
 
 function saveListeners() {
   document.querySelectorAll(".delay,.rav,.note").forEach((el) => {
-    el.addEventListener("change", saveData);
+    el.addEventListener("input", saveData);
   });
 }
 
@@ -237,7 +294,13 @@ function saveData() {
   updateTimes();
 }
 
-/* MODE COURSE */
+function updateObservateur(km) {
+  highlightObservateur(km);
+
+  updateObservateurCountdown();
+}
+
+/* COURSE MODE */
 
 function updateCourse() {
   let now = new Date();
@@ -252,7 +315,6 @@ function updateCourse() {
   let [h, m] = start.split(":");
 
   let s = new Date();
-
   s.setHours(h);
   s.setMinutes(m);
   s.setSeconds(0);
@@ -264,7 +326,7 @@ function updateCourse() {
   let ravitos = [];
 
   tbody.querySelectorAll("tr").forEach((r, i) => {
-    let d = parseInt(r.querySelector(".delay").value) || 0;
+    let d = toSec(r.querySelector(".delay").value);
 
     cumul += toSec(pace[i]) + d;
 
@@ -287,9 +349,7 @@ function updateCourse() {
     let cls =
       r.cumul > elapsed && !html.includes("next") ? "ravito next" : "ravito";
 
-    html += `<div class="${cls}">
-KM ${r.km} - ${r.rav} ${r.note} ${r.time}
-</div>`;
+    html += `<div class="${cls}">KM ${r.km} - ${r.rav} ${r.note} ${r.time}</div>`;
   });
 
   document.getElementById("ravitoList").innerHTML = html;
@@ -300,27 +360,27 @@ KM ${r.km} - ${r.rav} ${r.note} ${r.time}
 /* OBSERVATEUR */
 
 function updateObservateur(km) {
-  let now = new Date();
-
-  document.getElementById("obsTime").innerText = now.toTimeString().slice(0, 8);
-
-  document.getElementById("obsKm").innerText = "KM " + km;
-
   highlightObservateur(km);
 }
 
 function highlightObservateur(km) {
   let rows = document.querySelectorAll("#obsTable tbody tr");
 
-  rows.forEach((r) => {
-    r.classList.remove("current");
+  let targetRow = null;
+  let bestKm = Infinity;
 
+  rows.forEach((r) => {
     let rowKm = parseInt(r.dataset.km);
 
-    if (rowKm >= km && !document.querySelector("#obsTable tr.current")) {
-      r.classList.add("current");
+    if (rowKm >= km && rowKm < bestKm) {
+      bestKm = rowKm;
+      targetRow = r;
     }
   });
+
+  if (targetRow) {
+    targetRow.scrollIntoView({ block: "center" });
+  }
 }
 
 /* CSV */
@@ -360,10 +420,11 @@ function buildObservateurTable() {
 
         tbody.appendChild(tr);
       }
+      updateTimes();
     });
 }
 
-/* MAJ TEMPS OBSERVATEUR */
+/* UPDATE OBSERVATEUR TIMES */
 
 function updateObservateurTimes() {
   let rows = document.querySelectorAll("#obsTable tbody tr");
@@ -399,6 +460,70 @@ function resetUrl() {
   document.getElementById("urlFrame").src = "";
 }
 
+function updateObservateurCountdown() {
+  let now = new Date();
+
+  let rows = document.querySelectorAll("#obsTable tbody tr");
+
+  let nextRow = null;
+  let nextTime = null;
+
+  rows.forEach((r, index) => {
+    r.style.background = "";
+    if (index === 0) return;
+    let cell = r.querySelector(".obsTime");
+    if (!cell) return;
+
+    let t = cell.innerText.trim();
+    if (!t) return;
+
+    let [h, m, s] = t.split(":");
+
+    let target = new Date();
+    target.setHours(h);
+    target.setMinutes(m);
+    target.setSeconds(s);
+
+    if (target > now) {
+      if (nextTime === null || target < nextTime) {
+        nextTime = target;
+        nextRow = r;
+      }
+    }
+  });
+
+  if (!nextRow) {
+    document.getElementById("obsNextCountdown").innerText = "terminé";
+    return;
+  }
+
+  let diff = Math.floor((nextTime - now) / 1000);
+
+  let mm = Math.floor(diff / 60);
+  let ss = diff % 60;
+
+  const block = document.getElementById("obsNextBlock");
+
+  let color = "red";
+  if (diff > 600) {
+    color = "yellow";
+  } else if (diff > 300) {
+    color = "orange";
+  }
+
+  block.style.background = color;
+  nextRow.style.background = color;
+
+  document.getElementById("obsNextKm").innerText = "KM " + nextRow.dataset.km;
+
+  document.getElementById("obsNextTime").innerText = nextTime
+    .toTimeString()
+    .slice(0, 8);
+
+  document.getElementById("obsNextCountdown").innerText =
+    String(mm).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+}
+
 /* TABS */
 
 function showTab(id) {
@@ -413,8 +538,41 @@ function showTab(id) {
 
 window.onload = () => {
   buildTable();
-
   buildObservateurTable();
-};
 
-setInterval(updateCourse, 1000);
+  const startInput = document.getElementById("startTime");
+  const startBtn = document.getElementById("startNow");
+
+  // recalcul automatique quand l'heure de départ change
+  if (startInput) {
+    startInput.addEventListener("change", () => {
+      updateTimes();
+    });
+
+    startInput.addEventListener("input", () => {
+      updateTimes();
+    });
+  }
+
+  // bouton START : met l'heure actuelle
+  if (startBtn && startInput) {
+    startBtn.addEventListener("click", () => {
+      const now = new Date();
+
+      const h = String(now.getHours()).padStart(2, "0");
+      const m = String(now.getMinutes()).padStart(2, "0");
+
+      startInput.value = `${h}:${m}`;
+
+      updateTimes();
+      });
+      }
+      };
+
+      if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+      }
+
+      setInterval(updateCourse, 1000);
+      setInterval(updateObservateurCountdown, 1000);
+
