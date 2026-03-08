@@ -1,0 +1,75 @@
+body {
+    font-family: Arial;
+    text-align: center;
+}
+
+table {
+    border-collapse: collapse;
+    margin: auto;
+    margin-top: 20px;
+}
+
+td,
+th {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+}
+
+.tab {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+/* MODE COURSE */
+
+#course {
+    background: black;
+    color: white;
+    height: 100vh;
+    padding-top: 40px;
+}
+
+#courseTime {
+    font-size: 60px;
+}
+
+#courseKm {
+    font-size: 50px;
+    margin: 20px;
+}
+
+.ravito {
+    font-size: 28px;
+}
+
+.next {
+    color: yellow;
+    font-weight: bold;
+}
+
+/* OBSERVATEUR */
+
+#obsTime {
+    font-size: 70px;
+}
+
+#obsKm {
+    font-size: 120px;
+    margin-bottom: 20px;
+}
+
+#obsTable tr.current {
+    background: #ffe066;
+    font-weight: bold;
+}
+
+/* URL */
+
+#urlFrame {
+    width: 100%;
+    height: 80vh;
+    border: none;
+}

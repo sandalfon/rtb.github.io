@@ -7,73 +7,7 @@
         <title>Plan Marathon</title>
 
         <link rel="manifest" href="manifest.json" />
-
-        <style>
-            body {
-                font-family: Arial;
-                text-align: center;
-            }
-            table {
-                border-collapse: collapse;
-                margin: auto;
-            }
-            td,
-            th {
-                border: 1px solid #ccc;
-                padding: 5px;
-            }
-            input {
-                width: 70px;
-            }
-            .tab {
-                display: none;
-            }
-            .active {
-                display: block;
-            } /* Mode course */
-            #course {
-                background: black;
-                color: white;
-                height: 100vh;
-                padding-top: 40px;
-            }
-            #courseTime {
-                font-size: 60px;
-            }
-            #courseKm {
-                font-size: 50px;
-                margin: 20px;
-            }
-            .ravito {
-                font-size: 28px;
-                margin: 10px;
-            }
-            .next {
-                color: yellow;
-                font-weight: bold;
-            }
-            /* URL */
-            #urlFrame {
-                width: 100%;
-                height: 80vh;
-                border: none;
-            }
-            #urlInputBox {
-                margin: 20px;
-            } /* Couleurs KM */
-            .km10 {
-                background: #e6f3ff;
-            }
-            .km21 {
-                background: #ffe6e6;
-            }
-            .km30 {
-                background: #e6ffe6;
-            }
-            .km40 {
-                background: #fff3cd;
-            }
-        </style>
+        <link rel="stylesheet" href="style.css" />
     </head>
 
     <body>
@@ -81,23 +15,20 @@
 
         <button onclick="showTab('tableTab')">TABLEAU</button>
         <button onclick="showTab('course')">MODE COURSE</button>
+        <button onclick="showTab('observateur')">OBSERVATEUR</button>
         <button onclick="showTab('strava')">STRAVA</button>
         <button onclick="showTab('urltab')">URL</button>
 
         <!-- TABLEAU -->
 
         <div id="tableTab" class="tab active">
-            <div id="controls">
-                Départ :
-                <input type="time" id="startTime" />
+            Départ :
+            <input type="time" id="startTime" />
 
-                <br /><br />
+            <br /><br />
 
-                <button id="pace615">PACE<br />6:15</button>
-                <button id="pace630">PACE<br />6:30</button>
-            </div>
-
-            <br />
+            <button id="pace615">PACE 6:15</button>
+            <button id="pace630">PACE 6:30</button>
 
             <table id="table">
                 <thead>
@@ -114,8 +45,6 @@
 
                 <tbody></tbody>
             </table>
-
-            <div id="totalTime"></div>
         </div>
 
         <!-- MODE COURSE -->
@@ -128,6 +57,30 @@
             <div id="ravitoList"></div>
         </div>
 
+        <!-- OBSERVATEUR -->
+
+        <div id="observateur" class="tab">
+            <div id="obsTime"></div>
+
+            <div id="obsKm"></div>
+
+            <table id="obsTable">
+                <thead>
+                    <tr>
+                        <th>KM</th>
+                        <th>Lieu</th>
+                        <th>Temps G</th>
+                        <th>Délai L</th>
+                        <th>Station</th>
+                        <th>Ligne</th>
+                        <th>Commentaire</th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+            </table>
+        </div>
+
         <!-- STRAVA -->
 
         <div id="strava" class="tab">
@@ -136,8 +89,6 @@
                 data-embed-type="route"
                 data-embed-id="3314660708901242298"
                 data-style="standard"
-                data-map-hash="11.3/41.3986/2.1843"
-                data-from-embed="true"
             ></div>
 
             <script src="https://strava-embeds.com/embed.js"></script>
@@ -146,13 +97,10 @@
         <!-- URL -->
 
         <div id="urltab" class="tab">
-            <div id="urlInputBox">
-                <input type="text" id="customUrl" placeholder="https://" />
+            <input type="text" id="customUrl" placeholder="https://" />
 
-                <button onclick="loadUrl()">Afficher</button>
-
-                <button onclick="resetUrl()">Reset</button>
-            </div>
+            <button onclick="loadUrl()">Afficher</button>
+            <button onclick="resetUrl()">Reset</button>
 
             <iframe id="urlFrame"></iframe>
         </div>
