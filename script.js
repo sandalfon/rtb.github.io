@@ -383,6 +383,44 @@ function highlightObservateur(km) {
   }
 }
 
+/* UPDATE OBSERVATEUR TIMES */
+
+function updateObservateurTimes() {
+  let rows = document.querySelectorAll("#obsTable tbody tr");
+
+  // Get start time for KM 0
+  let startTimeVal = document.getElementById("startTime").value;
+  let baseTimeStr = "--:--:--";
+  if (startTimeVal) {
+    let [h, m] = startTimeVal.split(":");
+    let base = new Date();
+    base.setHours(h);
+    base.setMinutes(m);
+    base.setSeconds(0);
+    baseTimeStr = base.toTimeString().slice(0, 8);
+  }
+
+  rows.forEach((r) => {
+    let km = parseInt(r.dataset.km);
+
+    let cell = r.querySelector(".obsTime");
+    if (!cell) return;
+
+    if (km === 0) {
+      cell.innerText = baseTimeStr;
+      return;
+    }
+
+    let tableRow = document.querySelectorAll("#table tbody tr")[km - 1];
+
+    if (!tableRow) return;
+
+    let passage = tableRow.querySelector(".passage").innerText;
+
+    cell.innerText = passage;
+  });
+}
+
 /* CSV */
 
 function buildObservateurTable() {
@@ -393,55 +431,56 @@ function buildObservateurTable() {
 
       let sep = lines[0].includes(";") ? ";" : ",";
 
-      let headers = lines[0].split(sep).map((h) => h.trim());
+      let csvHeaders = lines[0].split(sep).map((h) => h.trim());
 
       let tbody = document.querySelector("#obsTable tbody");
 
       tbody.innerHTML = "";
 
+      // Order of columns expected in the HTML table
+      const targetHeaders = [
+        "KM",
+        "Lieu",
+        "Temps G",
+        "Délai L",
+        "Ligne",
+        "Station",
+        "Commentaire",
+      ];
+
       for (let i = 1; i < lines.length; i++) {
         let cols = lines[i].split(sep).map((c) => c.trim());
 
+        let rowData = {};
+        csvHeaders.forEach((h, idx) => {
+          rowData[h] = cols[idx];
+        });
+
         let tr = document.createElement("tr");
 
-        headers.forEach((h, index) => {
+        targetHeaders.forEach((th) => {
           let td = document.createElement("td");
 
-          if (h == "Temps G") {
+          if (th === "Temps G") {
             td.classList.add("obsTime");
           } else {
-            td.innerText = cols[index] || "";
+            // Map 'Commentaire' to 'sCommentaire' or 'Commentaire'
+            let value = rowData[th];
+            if (value === undefined && th === "Commentaire") {
+              value = rowData["sCommentaire"];
+            }
+            td.innerText = value || "";
           }
 
           tr.appendChild(td);
         });
 
-        tr.dataset.km = cols[0];
+        tr.dataset.km = rowData["KM"] || cols[0];
 
         tbody.appendChild(tr);
       }
       updateTimes();
     });
-}
-
-/* UPDATE OBSERVATEUR TIMES */
-
-function updateObservateurTimes() {
-  let rows = document.querySelectorAll("#obsTable tbody tr");
-
-  rows.forEach((r) => {
-    let km = parseInt(r.dataset.km);
-
-    let tableRow = document.querySelectorAll("#table tbody tr")[km - 1];
-
-    if (!tableRow) return;
-
-    let passage = tableRow.querySelector(".passage").innerText;
-
-    let cell = r.querySelector(".obsTime");
-
-    if (cell) cell.innerText = passage;
-  });
 }
 
 /* URL */
