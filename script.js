@@ -499,6 +499,8 @@ function resetUrl() {
   document.getElementById("urlFrame").src = "";
 }
 
+let lastNotifKm = -1;
+
 function updateObservateurCountdown() {
   let now = new Date();
 
@@ -537,6 +539,20 @@ function updateObservateurCountdown() {
   }
 
   let diff = Math.floor((nextTime - now) / 1000);
+
+  // Vibration and Notification at 2 minutes
+  let km = nextRow.dataset.km;
+  if (diff <= 120 && diff > 115 && lastNotifKm !== km) {
+    if (navigator.vibrate) {
+      navigator.vibrate([500, 200, 500]);
+    }
+    if (Notification.permission === "granted") {
+      new Notification("Plan Marathon", {
+        body: `Arrivée au KM ${km} dans 2 minutes !`,
+      });
+    }
+    lastNotifKm = km;
+  }
 
   let mm = Math.floor(diff / 60);
   let ss = diff % 60;
@@ -580,6 +596,11 @@ function showTab(id) {
 window.onload = () => {
   buildTable();
   buildObservateurTable();
+
+  // Ask for notification permission
+  if ("Notification" in window && Notification.permission !== "denied") {
+    Notification.requestPermission();
+  }
 
   const startInput = document.getElementById("startTime");
   const startBtn = document.getElementById("startNow");
